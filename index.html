@@ -1,0 +1,269 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup 2026 — Match Day Dashboard</title>
+<style>
+  :root{
+    --pitch-night:#0A1E14;
+    --panel:#11291C;
+    --panel-2:#16331F;
+    --line:#2C5A40;
+    --floodlight:#EAF6EC;
+    --muted:#8FB39C;
+    --gold:#FFD24D;
+    --live:#FF5252;
+    --win:#5BE08A;
+    --lose:#FF7B7B;
+    --radius:14px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(ellipse 60% 40% at 50% -5%, rgba(255,210,77,.08), transparent 60%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.012) 0 80px, transparent 80px 160px),
+      var(--pitch-night);
+    color:var(--floodlight);
+    font-family:"Segoe UI", -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:0 18px}
+
+  /* ---------- header / scoreboard ---------- */
+  header{padding:34px 0 10px;text-align:center}
+  .eyebrow{
+    letter-spacing:.35em;font-size:.72rem;color:var(--gold);
+    text-transform:uppercase;font-weight:700;
+  }
+  h1{
+    font-family:Impact, "Arial Black", "Segoe UI", sans-serif;
+    font-weight:900;font-size:clamp(2rem,5vw,3.4rem);
+    letter-spacing:.04em;text-transform:uppercase;
+    margin:6px 0 2px;
+  }
+  h1 .accent{color:var(--gold)}
+  .sub{color:var(--muted);font-size:.95rem}
+
+  .scoreboard{
+    margin:26px auto 0;max-width:680px;
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:
+      radial-gradient(circle 130px at 50% 50%, transparent 128px, rgba(255,255,255,.05) 129px 130px, transparent 131px),
+      linear-gradient(180deg, var(--panel-2), var(--panel));
+    padding:22px 24px;position:relative;overflow:hidden;
+  }
+  .scoreboard::before{ /* halfway line */
+    content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;
+    background:rgba(255,255,255,.05);
+  }
+  .sb-label{font-size:.7rem;letter-spacing:.3em;color:var(--muted);text-transform:uppercase}
+  .sb-teams{
+    font-family:Impact,"Arial Black",sans-serif;font-size:clamp(1.2rem,3.4vw,1.9rem);
+    letter-spacing:.03em;margin:8px 0 4px;text-transform:uppercase;
+  }
+  .sb-meta{color:var(--muted);font-size:.85rem}
+  .countdown{
+    display:flex;gap:14px;justify-content:center;margin-top:14px;
+    font-variant-numeric:tabular-nums;
+  }
+  .cd-cell{min-width:64px}
+  .cd-num{
+    font-family:Impact,"Arial Black",sans-serif;font-size:2rem;color:var(--gold);
+    background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:8px;
+    padding:6px 0;
+  }
+  .cd-unit{font-size:.65rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-top:5px}
+  .tz-note{margin-top:12px;font-size:.78rem;color:var(--muted)}
+
+  /* ---------- layout ---------- */
+  .grid{display:grid;grid-template-columns:1.55fr 1fr;gap:22px;margin-top:34px}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+
+  section h2{
+    font-family:Impact,"Arial Black",sans-serif;letter-spacing:.06em;
+    text-transform:uppercase;font-size:1.05rem;margin-bottom:12px;
+    display:flex;align-items:center;gap:10px;
+  }
+  section h2::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* ---------- fixtures ---------- */
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .btn{
+    background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:8px;
+    color:var(--floodlight);font:inherit;font-size:.82rem;font-weight:700;
+    padding:7px 14px;cursor:pointer;
+  }
+  .btn:hover{border-color:var(--gold);color:var(--gold)}
+  .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .btn.active{background:var(--gold);color:#0A1E14;border-color:var(--gold)}
+  .toolbar-msg{font-size:.78rem;color:var(--win)}
+  .score-input{
+    width:42px;text-align:center;
+    background:rgba(0,0,0,.35);border:1px solid var(--gold);border-radius:6px;
+    color:var(--gold);font-family:Impact,"Arial Black",sans-serif;font-size:1.1rem;
+    padding:3px 2px;-moz-appearance:textfield;
+  }
+  .score-input::-webkit-outer-spin-button,.score-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .score-input:focus{outline:2px solid var(--gold);outline-offset:1px}
+  .score-sep{color:var(--muted);font-weight:800;padding:0 2px}
+  .day{margin-bottom:18px}
+  .day-head{
+    font-size:.75rem;letter-spacing:.25em;text-transform:uppercase;
+    color:var(--gold);margin:0 0 8px 2px;font-weight:700;
+  }
+  .match{
+    display:grid;grid-template-columns:1fr auto 1fr auto;gap:10px;align-items:center;
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line);border-radius:10px;
+    padding:11px 14px;margin-bottom:8px;
+  }
+  .match.live{border-color:var(--live);box-shadow:0 0 0 1px rgba(255,82,82,.35), 0 0 18px rgba(255,82,82,.12)}
+  .team{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.95rem;min-width:0}
+  .team .flag{font-size:1.25rem;flex-shrink:0}
+  .team.away{justify-content:flex-end;text-align:right}
+  .team .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .centre{
+    text-align:center;font-variant-numeric:tabular-nums;min-width:64px;
+  }
+  .score{font-family:Impact,"Arial Black",sans-serif;font-size:1.2rem;letter-spacing:.08em}
+  .ko-time{font-size:.92rem;color:var(--floodlight);font-weight:700}
+  .status{
+    font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+    padding:3px 8px;border-radius:99px;border:1px solid var(--line);
+    color:var(--muted);justify-self:end;white-space:nowrap;
+  }
+  .status.live{color:#fff;background:var(--live);border-color:var(--live);animation:pulse 1.4s infinite}
+  .status.ft{color:var(--gold);border-color:var(--gold)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+  @media (prefers-reduced-motion: reduce){.status.live{animation:none}}
+  .venue{grid-column:1/-1;font-size:.72rem;color:var(--muted);margin-top:-2px}
+  @media(max-width:520px){
+    .match{grid-template-columns:1fr auto 1fr;row-gap:6px}
+    .status{grid-column:1/-1;justify-self:center}
+  }
+
+  /* ---------- bets ---------- */
+  .pool{
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin-bottom:16px;
+  }
+  .pool-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .pool-name{font-family:Impact,"Arial Black",sans-serif;letter-spacing:.06em;text-transform:uppercase}
+  .pool-total{font-size:.8rem;color:var(--muted)}
+  .bet-row{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 0;border-top:1px dashed rgba(255,255,255,.08);
+  }
+  .bet-row:first-of-type{border-top:none}
+  .avatar{
+    width:32px;height:32px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:.78rem;color:#0A1E14;
+  }
+  .bet-row .who{flex:1;font-weight:600}
+  .bet-input{
+    width:110px;text-align:right;
+    background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:8px;
+    color:var(--floodlight);font:inherit;font-variant-numeric:tabular-nums;
+    padding:6px 10px;font-weight:700;
+  }
+  .bet-input:focus{outline:2px solid var(--gold);outline-offset:1px}
+  .bet-input.pos{color:var(--win)}
+  .bet-input.neg{color:var(--lose)}
+
+  .leaderboard{border-color:var(--gold)}
+  .lb-row{
+    display:flex;align-items:center;gap:10px;padding:9px 0;
+    border-top:1px dashed rgba(255,255,255,.08);
+  }
+  .lb-row:first-of-type{border-top:none}
+  .lb-rank{
+    font-family:Impact,"Arial Black",sans-serif;width:26px;color:var(--gold);font-size:1.1rem;
+  }
+  .lb-row .who{flex:1;font-weight:600}
+  .lb-total{font-variant-numeric:tabular-nums;font-weight:800}
+  .lb-total.pos{color:var(--win)}
+  .lb-total.neg{color:var(--lose)}
+  .hint{font-size:.74rem;color:var(--muted);margin-top:8px;line-height:1.5}
+  footer{margin-top:40px;text-align:center;color:var(--muted);font-size:.75rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">FIFA World Cup · USA · Canada · Mexico</div>
+    <h1>Match Day <span class="accent">2026</span></h1>
+    <div class="sub">Group stage fixtures · all kickoff times shown in <strong id="tzName">your local time</strong></div>
+
+    <div class="scoreboard" id="scoreboard">
+      <div class="sb-label" id="sbLabel">Next kickoff</div>
+      <div class="sb-teams" id="sbTeams">—</div>
+      <div class="sb-meta" id="sbMeta"></div>
+      <div class="countdown" id="countdown">
+        <div class="cd-cell"><div class="cd-num" id="cdD">--</div><div class="cd-unit">days</div></div>
+        <div class="cd-cell"><div class="cd-num" id="cdH">--</div><div class="cd-unit">hrs</div></div>
+        <div class="cd-cell"><div class="cd-num" id="cdM">--</div><div class="cd-unit">min</div></div>
+        <div class="cd-cell"><div class="cd-num" id="cdS">--</div><div class="cd-unit">sec</div></div>
+      </div>
+      <div class="tz-note" id="tzNote"></div>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ============ FIXTURES ============ -->
+    <section>
+      <h2>⚽ Fixtures &amp; Results</h2>
+      <div class="toolbar">
+        <button class="btn" id="editToggle">✏️ Edit scores</button>
+        <button class="btn" id="copyData" title="Copies the updated MATCHES array — paste it into the hosted file to publish your edits">📋 Copy match data</button>
+        <span class="toolbar-msg" id="toolbarMsg"></span>
+      </div>
+      <div id="fixtures"></div>
+      <p class="hint">Statuses flip to <strong>LIVE</strong> automatically at kickoff and to <strong>FT</strong> two hours later. Tap <strong>✏️ Edit scores</strong> to type results straight into the page. Edits live in your browser only — to publish them to friends, hit <strong>📋 Copy match data</strong> and paste over the <code>MATCHES</code> array in your hosted file.</p>
+    </section>
+
+    <!-- ============ BETS ============ -->
+    <section>
+      <h2>💰 The Pools</h2>
+
+      <div class="pool leaderboard">
+        <div class="pool-head">
+          <span class="pool-name" style="color:var(--gold)">🏆 Leaderboard</span>
+          <span class="pool-total">combined P/L</span>
+        </div>
+        <div id="leaderboard"></div>
+      </div>
+
+      <div class="pool" data-pool="Sebpool">
+        <div class="pool-head">
+          <span class="pool-name">Sebpool</span>
+          <span class="pool-total" id="total-Sebpool"></span>
+        </div>
+        <div class="rows"></div>
+      </div>
+
+      <div class="pool" data-pool="Xingpool">
+        <div class="pool-head">
+          <span class="pool-name">Xingpool</span>
+          <span class="pool-total" id="total-Xingpool"></span>
+        </div>
+        <div class="rows"></div>
+      </div>
+
+      <p class="hint">Tap any amount to edit — leaderboard and pool totals recalculate instantly. Use negative numbers for losses (e.g. <code>-150</code>). Starting figures can be changed in the <code>BETS</code> object in the code.</p>
+    </section>
+
+  </div>
+
+  <footer>Group stage · 11 June – 27 June 2026 · Final: 19 July, New York/New Jersey</footer>
+</div>
+
+
+</body>
+</html>
