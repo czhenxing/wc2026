@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -264,6 +264,284 @@
   <footer>Group stage · 11 June – 27 June 2026 · Final: 19 July, New York/New Jersey</footer>
 </div>
 
+<script>
+/* =====================================================
+   MATCH DATA — kickoff stored in US Eastern Time (ET).
+   Format: [year, month, day, hour24(ET), home, away, flagH, flagA, venue, scoreH, scoreA]
+   Leave scores as null until full time, then fill them in.
+   ET in June = UTC-4 (handled automatically below).
+===================================================== */
+const MATCHES = [
+  [2026,6,11,15, "Mexico","South Africa","🇲🇽","🇿🇦","Estadio Azteca, Mexico City", 2,0],
+  [2026,6,11,22, "South Korea","Czechia","🇰🇷","🇨🇿","Estadio Akron, Guadalajara", 2,1],
+  [2026,6,12,15, "Canada","Bosnia & Herzegovina","🇨🇦","🇧🇦","BMO Field, Toronto", null,null],
+  [2026,6,12,21, "USA","Paraguay","🇺🇸","🇵🇾","SoFi Stadium, Los Angeles", null,null],
+  [2026,6,13,15, "Qatar","Switzerland","🇶🇦","🇨🇭","Levi's Stadium, SF Bay Area", null,null],
+  [2026,6,13,18, "Brazil","Morocco","🇧🇷","🇲🇦","MetLife Stadium, NY/NJ", null,null],
+  [2026,6,13,21, "Haiti","Scotland","🇭🇹","🏴󠁧󠁢󠁳󠁣󠁴󠁿","Gillette Stadium, Boston", null,null],
+  [2026,6,14,0,  "Australia","Türkiye","🇦🇺","🇹🇷","—", null,null],
+  [2026,6,14,13, "Germany","Curaçao","🇩🇪","🇨🇼","—", null,null],
+  [2026,6,14,16, "Netherlands","Japan","🇳🇱","🇯🇵","—", null,null],
+  [2026,6,14,19, "Ivory Coast","Ecuador","🇨🇮","🇪🇨","—", null,null],
+  [2026,6,14,22, "Sweden","Tunisia","🇸🇪","🇹🇳","—", null,null],
+  [2026,6,15,12, "Spain","Cape Verde","🇪🇸","🇨🇻","—", null,null],
+  [2026,6,15,15, "Belgium","Egypt","🇧🇪","🇪🇬","—", null,null],
+  [2026,6,17,13, "Portugal","DR Congo","🇵🇹","🇨🇩","—", null,null],
+  [2026,6,17,16, "England","Croatia","🏴󠁧󠁢󠁥󠁮󠁧󠁿","🇭🇷","—", null,null],
+  [2026,6,17,19, "Ghana","Panama","🇬🇭","🇵🇦","—", null,null],
+  [2026,6,17,22, "Uzbekistan","Colombia","🇺🇿","🇨🇴","—", null,null],
+  [2026,6,18,12, "Czechia","South Africa","🇨🇿","🇿🇦","Mercedes-Benz Stadium, Atlanta", null,null],
+  [2026,6,18,15, "Switzerland","Bosnia & Herzegovina","🇨🇭","🇧🇦","SoFi Stadium, Los Angeles", null,null],
+  [2026,6,18,18, "Canada","Qatar","🇨🇦","🇶🇦","BC Place, Vancouver", null,null],
+  [2026,6,18,21, "Mexico","South Korea","🇲🇽","🇰🇷","Estadio Akron, Guadalajara", null,null],
+  [2026,6,19,15, "USA","Australia","🇺🇸","🇦🇺","—", null,null],
+  [2026,6,19,18, "Scotland","Morocco","🏴󠁧󠁢󠁳󠁣󠁴󠁿","🇲🇦","Gillette Stadium, Boston", null,null],
+  [2026,6,19,21, "Brazil","Haiti","🇧🇷","🇭🇹","Lincoln Financial Field, Philadelphia", null,null],
+  [2026,6,20,0,  "Türkiye","Paraguay","🇹🇷","🇵🇾","—", null,null],
+  [2026,6,20,13, "Netherlands","Sweden","🇳🇱","🇸🇪","—", null,null],
+  [2026,6,20,16, "Germany","Ivory Coast","🇩🇪","🇨🇮","—", null,null],
+  [2026,6,20,20, "Ecuador","Curaçao","🇪🇨","🇨🇼","—", null,null],
+  [2026,6,21,0,  "Tunisia","Japan","🇹🇳","🇯🇵","—", null,null],
+  [2026,6,21,12, "Spain","Saudi Arabia","🇪🇸","🇸🇦","—", null,null],
+  [2026,6,21,15, "Belgium","Iran","🇧🇪","🇮🇷","—", null,null],
+  [2026,6,21,18, "Uruguay","Cape Verde","🇺🇾","🇨🇻","—", null,null],
+  [2026,6,21,21, "New Zealand","Egypt","🇳🇿","🇪🇬","—", null,null],
+  [2026,6,22,13, "Argentina","Austria","🇦🇷","🇦🇹","—", null,null],
+  [2026,6,22,17, "France","Iraq","🇫🇷","🇮🇶","—", null,null],
+  [2026,6,22,20, "Norway","Senegal","🇳🇴","🇸🇳","—", null,null],
+  [2026,6,22,23, "Jordan","Algeria","🇯🇴","🇩🇿","—", null,null],
+  [2026,6,24,15, "Switzerland","Canada","🇨🇭","🇨🇦","BC Place, Vancouver", null,null],
+  [2026,6,24,15, "Bosnia & Herzegovina","Qatar","🇧🇦","🇶🇦","Lumen Field, Seattle", null,null],
+  [2026,6,24,21, "Czechia","Mexico","🇨🇿","🇲🇽","Estadio Azteca, Mexico City", null,null],
+  [2026,6,24,21, "South Africa","South Korea","🇿🇦","🇰🇷","Estadio BBVA, Monterrey", null,null],
+];
 
+/* =====================================================
+   BET DATA — edit starting figures here.
+===================================================== */
+const FRIENDS = {
+  "Zx": "#FFD24D",
+  "Ky": "#7FD8FF",
+  "HJ": "#FF9D7A",
+};
+const BETS = {
+  "Sebpool":  { "Zx": 700, "Ky": 0, "HJ": 0 },
+  "Xingpool": { "Zx": 0,   "Ky": 0, "HJ": 210 },
+};
+
+/* ===================================================== */
+const ET_OFFSET = 4; // June = EDT, UTC-4
+const MATCH_MINUTES = 120; // window during which a match counts as LIVE
+
+const toDate = m => new Date(Date.UTC(m[0], m[1]-1, m[2], m[3] + ET_OFFSET, 0, 0));
+
+function statusOf(m, now){
+  const ko = toDate(m);
+  if (now < ko) return "upcoming";
+  if (now - ko < MATCH_MINUTES * 60000) return "live";
+  return "ft";
+}
+
+const timeFmt = new Intl.DateTimeFormat(undefined,{hour:"numeric",minute:"2-digit"});
+const dayFmt  = new Intl.DateTimeFormat(undefined,{weekday:"long",day:"numeric",month:"long"});
+const fullFmt = new Intl.DateTimeFormat(undefined,{weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+
+function renderFixtures(){
+  const now = new Date();
+  const box = document.getElementById("fixtures");
+  box.innerHTML = "";
+  let currentDay = "", dayEl = null;
+
+  MATCHES
+    .map(m => ({m, ko: toDate(m)}))
+    .sort((a,b)=>a.ko-b.ko)
+    .forEach(({m, ko})=>{
+      const dayKey = dayFmt.format(ko);
+      if (dayKey !== currentDay){
+        currentDay = dayKey;
+        dayEl = document.createElement("div");
+        dayEl.className = "day";
+        dayEl.innerHTML = `<div class="day-head">${dayKey}</div>`;
+        box.appendChild(dayEl);
+      }
+      const st = statusOf(m, now);
+      const [ , , , , home, away, fh, fa, venue, sh, sa] = m;
+      const centre = editMode
+        ? `<span class="score-edit"><input class="score-input" type="number" min="0" max="99" data-side="9" value="${sh ?? ""}" placeholder="–" aria-label="${home} score"><span class="score-sep">:</span><input class="score-input" type="number" min="0" max="99" data-side="10" value="${sa ?? ""}" placeholder="–" aria-label="${away} score"></span>`
+        : (st === "upcoming")
+        ? `<div class="ko-time">${timeFmt.format(ko)}</div>`
+        : `<div class="score">${sh ?? "–"} : ${sa ?? "–"}</div>`;
+      const badge = st === "live" ? `<span class="status live">● Live</span>`
+                  : st === "ft"   ? `<span class="status ft">FT</span>`
+                  :                 `<span class="status">Kickoff</span>`;
+      const el = document.createElement("div");
+      el.className = "match" + (st==="live" ? " live" : "");
+      el.innerHTML = `
+        <div class="team"><span class="flag">${fh}</span><span class="name">${home}</span></div>
+        <div class="centre">${centre}</div>
+        <div class="team away"><span class="name">${away}</span><span class="flag">${fa}</span></div>
+        ${badge}
+        ${venue && venue !== "—" ? `<div class="venue">${venue}</div>` : ""}`;
+      if (editMode){
+        el.querySelectorAll(".score-input").forEach(inp=>{
+          inp.addEventListener("input", ()=>{
+            const idx = Number(inp.dataset.side);
+            m[idx] = inp.value === "" ? null : Math.max(0, Number(inp.value));
+          });
+        });
+      }
+      dayEl.appendChild(el);
+    });
+}
+
+/* ---------- score editing + publishing ---------- */
+let editMode = false;
+const editBtn = document.getElementById("editToggle");
+const copyBtn = document.getElementById("copyData");
+const toolbarMsg = document.getElementById("toolbarMsg");
+
+editBtn.addEventListener("click", ()=>{
+  editMode = !editMode;
+  editBtn.classList.toggle("active", editMode);
+  editBtn.textContent = editMode ? "✅ Done" : "✏️ Edit scores";
+  renderFixtures();
+});
+
+function matchesAsCode(){
+  const q = s => JSON.stringify(s);
+  const lines = MATCHES.map(m =>
+    `  [${m[0]},${m[1]},${m[2]},${m[3]}, ${q(m[4])},${q(m[5])},${q(m[6])},${q(m[7])},${q(m[8])}, ${m[9]===null?"null":m[9]},${m[10]===null?"null":m[10]}],`
+  );
+  return "const MATCHES = [\n" + lines.join("\n") + "\n];";
+}
+
+copyBtn.addEventListener("click", async ()=>{
+  const code = matchesAsCode();
+  let ok = false;
+  try { await navigator.clipboard.writeText(code); ok = true; }
+  catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = code; document.body.appendChild(ta); ta.select();
+    try { ok = document.execCommand("copy"); } catch(e2){}
+    ta.remove();
+  }
+  toolbarMsg.textContent = ok
+    ? "Copied! Paste over the MATCHES array in your hosted file."
+    : "Couldn't reach the clipboard — open the file and edit MATCHES directly.";
+  setTimeout(()=> toolbarMsg.textContent = "", 6000);
+});
+
+/* ---------- countdown to next kickoff (or current live match) ---------- */
+let target = null;
+function pickTarget(){
+  const now = new Date();
+  const sorted = MATCHES.map(m=>({m,ko:toDate(m)})).sort((a,b)=>a.ko-b.ko);
+  const live = sorted.find(x => statusOf(x.m, now) === "live");
+  const next = sorted.find(x => x.ko > now);
+  const sbT = document.getElementById("sbTeams");
+  const sbM = document.getElementById("sbMeta");
+  const sbL = document.getElementById("sbLabel");
+
+  if (live){
+    target = null;
+    sbL.textContent = "Live now";
+    sbT.innerHTML = `${live.m[6]} ${live.m[4]} <span style="color:var(--live)">vs</span> ${live.m[5]} ${live.m[7]}`;
+    sbM.textContent = (live.m[8] !== "—" ? live.m[8] + " · " : "") + "kicked off " + timeFmt.format(live.ko);
+    document.getElementById("countdown").style.display = "none";
+  } else if (next){
+    target = next.ko;
+    sbL.textContent = "Next kickoff";
+    sbT.innerHTML = `${next.m[6]} ${next.m[4]} <span style="color:var(--gold)">vs</span> ${next.m[5]} ${next.m[7]}`;
+    sbM.textContent = fullFmt.format(next.ko) + (next.m[8] !== "—" ? " · " + next.m[8] : "");
+    document.getElementById("countdown").style.display = "flex";
+  } else {
+    sbL.textContent = "Group stage";
+    sbT.textContent = "All listed matches played";
+    document.getElementById("countdown").style.display = "none";
+  }
+}
+function tick(){
+  if (!target) return;
+  let diff = Math.max(0, target - new Date());
+  const d = Math.floor(diff/86400000); diff -= d*86400000;
+  const h = Math.floor(diff/3600000);  diff -= h*3600000;
+  const mi= Math.floor(diff/60000);    diff -= mi*60000;
+  const s = Math.floor(diff/1000);
+  cdD.textContent = String(d).padStart(2,"0");
+  cdH.textContent = String(h).padStart(2,"0");
+  cdM.textContent = String(mi).padStart(2,"0");
+  cdS.textContent = String(s).padStart(2,"0");
+  if (target - new Date() <= 0){ pickTarget(); renderFixtures(); }
+}
+
+/* ---------- bets ---------- */
+const money = v => (v<0?"-":"+") + "$" + Math.abs(v).toLocaleString();
+
+function renderPools(){
+  document.querySelectorAll(".pool[data-pool]").forEach(poolEl=>{
+    const pool = poolEl.dataset.pool;
+    const rows = poolEl.querySelector(".rows");
+    rows.innerHTML = "";
+    Object.keys(FRIENDS).forEach(name=>{
+      const val = BETS[pool][name] ?? 0;
+      const row = document.createElement("div");
+      row.className = "bet-row";
+      row.innerHTML = `
+        <div class="avatar" style="background:${FRIENDS[name]}">${name}</div>
+        <div class="who">${name}</div>
+        <input class="bet-input" type="number" step="10" value="${val}" aria-label="${name} amount in ${pool}">`;
+      const input = row.querySelector("input");
+      const paint = ()=> input.className = "bet-input " + (Number(input.value)>0?"pos":Number(input.value)<0?"neg":"");
+      paint();
+      input.addEventListener("input", ()=>{
+        BETS[pool][name] = Number(input.value) || 0;
+        paint(); renderTotals();
+      });
+      rows.appendChild(row);
+    });
+  });
+  renderTotals();
+}
+
+function renderTotals(){
+  // pool totals
+  Object.keys(BETS).forEach(pool=>{
+    const sum = Object.values(BETS[pool]).reduce((a,b)=>a+b,0);
+    const el = document.getElementById("total-"+pool);
+    if (el) el.textContent = "pool net: " + money(sum);
+  });
+  // leaderboard
+  const totals = Object.keys(FRIENDS).map(name=>({
+    name,
+    total: Object.keys(BETS).reduce((s,p)=>s+(BETS[p][name]||0),0)
+  })).sort((a,b)=>b.total-a.total);
+
+  const lb = document.getElementById("leaderboard");
+  lb.innerHTML = "";
+  const medals = ["🥇","🥈","🥉"];
+  totals.forEach((t,i)=>{
+    const row = document.createElement("div");
+    row.className = "lb-row";
+    row.innerHTML = `
+      <div class="lb-rank">${medals[i] || (i+1)}</div>
+      <div class="avatar" style="background:${FRIENDS[t.name]}">${t.name}</div>
+      <div class="who">${t.name}</div>
+      <div class="lb-total ${t.total>0?"pos":t.total<0?"neg":""}">${money(t.total)}</div>`;
+    lb.appendChild(row);
+  });
+}
+
+/* ---------- boot ---------- */
+const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "local time";
+document.getElementById("tzName").textContent = tz.replace("_"," ");
+document.getElementById("tzNote").textContent = "Times auto-converted from US Eastern to " + tz.replace("_"," ");
+
+renderFixtures();
+pickTarget();
+renderPools();
+tick();
+setInterval(tick, 1000);
+setInterval(()=>{ if (editMode) return; pickTarget(); renderFixtures(); }, 60000);
+</script>
 </body>
 </html>
